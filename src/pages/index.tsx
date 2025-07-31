@@ -36,19 +36,24 @@ export default function Home() {
   const sendMove = () => {
     socketRef.current?.emit("move", {
       player: "me",
-      action: "roll dice",
+      action: "clicked button",
     });
+    setDotVisible(true); // ✅ show dot locally too
   };
 
   return (
-    <main className="p-4">
-      <h1 className="text-xl font-bold">Board Game</h1>
+    <main className="p-8">
+      <h1 className="text-2xl font-bold mb-4">Board Game Test</h1>
       <button
         onClick={sendMove}
-        className="mt-4 bg-blue-600 text-white px-4 py-2 rounded"
+        className="bg-blue-600 text-white px-6 py-2 rounded"
       >
-        Send Move
+        Click to Send Signal
       </button>
+
+      {dotVisible && (
+        <div className="w-4 h-4 mt-6 rounded-full bg-red-600 animate-pulse" />
+      )}
     </main>
   );
 }
