@@ -1,15 +1,12 @@
-import type { NextApiRequest, NextApiResponse } from "next";
 import { Server as IOServer } from "socket.io";
 import type { Server as HTTPServer } from "http";
+import type { NextApiRequest, NextApiResponse } from "next";
 import type { Socket as NetSocket } from "net";
 
 export const config = {
-  api: {
-    bodyParser: false,
-  },
+  api: { bodyParser: false },
 };
 
-// Attach Socket.IO server to Next.js response object
 type NextApiResponseWithSocket = NextApiResponse & {
   socket: NetSocket & {
     server: HTTPServer & {
@@ -17,6 +14,14 @@ type NextApiResponseWithSocket = NextApiResponse & {
     };
   };
 };
+
+type Dot = {
+  x: number;
+  y: number;
+  color: string;
+};
+
+let dots: Record<string, Dot> = {};
 
 export default function handler(
   req: NextApiRequest,
@@ -32,8 +37,20 @@ export default function handler(
     io.on("connection", (socket) => {
       console.log("🔌 Client connected:", socket.id);
 
-      socket.on("move", (data) => {
-        io.emit("move", data); // send to everyone including sender
+      const color = `hsl(${Math.floor(Math.random() * 360)}, 80%, 60%)`;
+      dots[socket.id] = { x: 50, y: 50, color };
+
+      socket.emit("dots-update", dots); // Send current state to new client
+      socket.broadcast.emit("dots-update", dots); // Let others know
+
+      socket.on("move", ({ x, y }) => {
+        dots[socket.id] = { ...dots[socket.id], x, y };
+        io.emit("dots-update", dots);
+      });
+
+      socket.on("disconnect", () => {
+        delete dots[socket.id];
+        io.emit("dots-update", dots);
       });
     });
 

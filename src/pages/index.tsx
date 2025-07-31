@@ -1,23 +1,20 @@
 import { useEffect, useRef, useState } from "react";
 import io from "socket.io-client";
 
-
-type MoveData = {
-  player: string;
-  action: string;
+// A dot represents a user's position and color
+type Dot = {
   x: number;
   y: number;
+  color: string;
 };
-
 
 export default function Home() {
   const socketRef = useRef<ReturnType<typeof io> | null>(null);
-  const [dot, setDot] = useState<{ x: number; y: number } | null>(null);
-
+  const [dots, setDots] = useState<Record<string, Dot>>({});
 
   useEffect(() => {
     const setupSocket = async () => {
-      await fetch("/api/socket");
+      await fetch("/api/socket"); // Ensure the server starts
       const socket = io({ path: "/api/socket" });
       socketRef.current = socket;
 
@@ -25,9 +22,9 @@ export default function Home() {
         console.log("✅ Connected:", socket.id);
       });
 
-      socket.on("move", (data: MoveData) => {
-        console.log("🎯 Move received:", data);
-        setDot({ x: data.x, y: data.y });
+      // Receive updated list of all dots
+      socket.on("dots-update", (incomingDots: Record<string, Dot>) => {
+        setDots(incomingDots);
       });
     };
 
@@ -39,18 +36,11 @@ export default function Home() {
   }, []);
 
   const sendMove = () => {
-  const x = Math.random() * 90; // % from 0 to 90
-  const y = Math.random() * 90;
+    const x = Math.random() * 90;
+    const y = Math.random() * 90;
 
-  socketRef.current?.emit("move", {
-    player: "me",
-    action: "clicked button",
-    x,
-    y,
-  });
-
-  setDot({ x, y });
-};
+    socketRef.current?.emit("move", { x, y });
+  };
 
   return (
     <main className="p-8">
@@ -59,20 +49,22 @@ export default function Home() {
         onClick={sendMove}
         className="bg-blue-600 text-white px-6 py-2 rounded"
       >
-        Click to Send Signal
+        Click to Move Your Dot
       </button>
 
-      {dot && (
-  <div
-    className="w-4 h-4 bg-red-500 rounded-full fixed"
-    style={{
-      top: `${dot.y}%`,
-      left: `${dot.x}%`,
-      transform: "translate(-50%, -50%)",
-    }}
-  />
-)}
-
+      {/* Render all dots from all users */}
+      {Object.entries(dots).map(([id, dot]) => (
+        <div
+          key={id}
+          className="w-4 h-4 rounded-full fixed"
+          style={{
+            backgroundColor: dot.color,
+            top: `${dot.y}%`,
+            left: `${dot.x}%`,
+            transform: "translate(-50%, -50%)",
+          }}
+        />
+      ))}
     </main>
   );
 }
