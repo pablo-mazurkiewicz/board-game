@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import io from "socket.io-client";
 
 type MoveData = {
@@ -8,6 +8,7 @@ type MoveData = {
 
 export default function Home() {
   const socketRef = useRef<ReturnType<typeof io> | null>(null);
+  const [dotVisible, setDotVisible] = useState(false);
 
   useEffect(() => {
     const setupSocket = async () => {
@@ -21,6 +22,7 @@ export default function Home() {
 
       socket.on("move", (data: MoveData) => {
         console.log("🎲 Move received:", data);
+        setDotVisible(true); // ✅ show red dot on message
       });
     };
 
