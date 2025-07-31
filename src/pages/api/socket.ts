@@ -1,6 +1,7 @@
 import type { NextApiRequest, NextApiResponse } from "next";
-import { Server as SocketIOServer } from "socket.io";
+import type { Server as HTTPServer } from "http";
 import type { Socket as NetSocket } from "net";
+import { Server as SocketIOServer } from "socket.io";
 
 export const config = {
   api: {
@@ -8,10 +9,10 @@ export const config = {
   },
 };
 
-// Define a type for the extended server object
+// Custom response type with socket.io attached
 type NextApiResponseWithSocket = NextApiResponse & {
   socket: NetSocket & {
-    server: {
+    server: HTTPServer & {
       io?: SocketIOServer;
     };
   };
@@ -23,10 +24,11 @@ export default function handler(
 ) {
   if (!res.socket.server.io) {
     console.log("🧠 Initializing Socket.IO server...");
-    const io = new SocketIOServer(res.socket.server as any, {
-    path: "/api/socket",
-  });
 
+    const httpServer = res.socket.server;
+    const io = new SocketIOServer(httpServer, {
+      path: "/api/socket",
+    });
 
     io.on("connection", (socket) => {
       console.log("🔌 Client connected:", socket.id);
