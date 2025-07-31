@@ -21,7 +21,7 @@ type Dot = {
   color: string;
 };
 
-let dots: Record<string, Dot> = {};
+const dots: Record<string, Dot> = {};
 
 export default function handler(
   req: NextApiRequest,
