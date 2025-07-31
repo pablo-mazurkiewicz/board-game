@@ -23,10 +23,10 @@ export default function handler(
 ) {
   if (!res.socket.server.io) {
     console.log("🧠 Initializing Socket.IO server...");
-    //@ts-ignore
-    const io = new SocketIOServer(res.socket.server, {
-      path: "/api/socket",
-    });
+    const io = new SocketIOServer(res.socket.server as any, {
+    path: "/api/socket",
+  });
+
 
     io.on("connection", (socket) => {
       console.log("🔌 Client connected:", socket.id);
