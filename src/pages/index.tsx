@@ -1,14 +1,20 @@
 import { useEffect, useRef, useState } from "react";
 import io from "socket.io-client";
 
+
 type MoveData = {
   player: string;
   action: string;
+  x: number;
+  y: number;
 };
+
 
 export default function Home() {
   const socketRef = useRef<ReturnType<typeof io> | null>(null);
   const [dotVisible, setDotVisible] = useState(false);
+  const [dot, setDot] = useState<{ x: number; y: number } | null>(null);
+
 
   useEffect(() => {
     const setupSocket = async () => {
@@ -21,8 +27,8 @@ export default function Home() {
       });
 
       socket.on("move", (data: MoveData) => {
-        console.log("🎲 Move received:", data);
-        setDotVisible(true); // ✅ show red dot on message
+        console.log("🎯 Move received:", data);
+        setDot({ x: data.x, y: data.y });
       });
     };
 
@@ -34,16 +40,22 @@ export default function Home() {
   }, []);
 
   const sendMove = () => {
-    socketRef.current?.emit("move", {
-      player: "me",
-      action: "clicked button",
-    });
-    setDotVisible(true); // ✅ show dot locally too
-  };
+  const x = Math.random() * 90; // % from 0 to 90
+  const y = Math.random() * 90;
+
+  socketRef.current?.emit("move", {
+    player: "me",
+    action: "clicked button",
+    x,
+    y,
+  });
+
+  setDot({ x, y });
+};
 
   return (
     <main className="p-8">
-      <h1 className="text-2xl font-bold mb-4">Board Game Test</h1>
+      <h1 className="text-xl font-bold mb-4">Board Game Test</h1>
       <button
         onClick={sendMove}
         className="bg-blue-600 text-white px-6 py-2 rounded"
@@ -51,9 +63,17 @@ export default function Home() {
         Click to Send Signal
       </button>
 
-      {dotVisible && (
-        <div className="w-4 h-4 mt-6 rounded-full bg-red-600 animate-pulse" />
-      )}
+      {dot && (
+  <div
+    className="w-4 h-4 bg-red-500 rounded-full fixed"
+    style={{
+      top: `${dot.y}%`,
+      left: `${dot.x}%`,
+      transform: "translate(-50%, -50%)",
+    }}
+  />
+)}
+
     </main>
   );
 }

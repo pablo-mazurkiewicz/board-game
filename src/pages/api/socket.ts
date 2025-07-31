@@ -9,7 +9,6 @@ export const config = {
   },
 };
 
-// Custom response type with socket.io attached
 type NextApiResponseWithSocket = NextApiResponse & {
   socket: NetSocket & {
     server: HTTPServer & {
@@ -18,6 +17,8 @@ type NextApiResponseWithSocket = NextApiResponse & {
   };
 };
 
+let io: SocketIOServer | undefined;
+
 export default function handler(
   req: NextApiRequest,
   res: NextApiResponseWithSocket
@@ -25,8 +26,7 @@ export default function handler(
   if (!res.socket.server.io) {
     console.log("🧠 Initializing Socket.IO server...");
 
-    const httpServer = res.socket.server;
-    const io = new SocketIOServer(httpServer, {
+    io = new SocketIOServer(res.socket.server as any, {
       path: "/api/socket",
     });
 
@@ -34,7 +34,8 @@ export default function handler(
       console.log("🔌 Client connected:", socket.id);
 
       socket.on("move", (data) => {
-        socket.broadcast.emit("move", data); // ✅ send to all others
+        console.log("📤 Broadcasting move to all clients");
+        io?.emit("move", data); // ✅ Broadcast to all, including sender
       });
     });
 
