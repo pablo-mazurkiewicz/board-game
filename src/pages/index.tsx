@@ -12,7 +12,6 @@ type MoveData = {
 
 export default function Home() {
   const socketRef = useRef<ReturnType<typeof io> | null>(null);
-  const [dotVisible, setDotVisible] = useState(false);
   const [dot, setDot] = useState<{ x: number; y: number } | null>(null);
 
 
