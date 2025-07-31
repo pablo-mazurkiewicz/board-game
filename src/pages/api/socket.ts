@@ -1,7 +1,7 @@
 import type { NextApiRequest, NextApiResponse } from "next";
+import { Server as IOServer } from "socket.io";
 import type { Server as HTTPServer } from "http";
 import type { Socket as NetSocket } from "net";
-import { Server as SocketIOServer } from "socket.io";
 
 export const config = {
   api: {
@@ -9,15 +9,14 @@ export const config = {
   },
 };
 
+// Attach Socket.IO server to Next.js response object
 type NextApiResponseWithSocket = NextApiResponse & {
   socket: NetSocket & {
     server: HTTPServer & {
-      io?: SocketIOServer;
+      io?: IOServer;
     };
   };
 };
-
-let io: SocketIOServer | undefined;
 
 export default function handler(
   req: NextApiRequest,
@@ -26,7 +25,7 @@ export default function handler(
   if (!res.socket.server.io) {
     console.log("🧠 Initializing Socket.IO server...");
 
-    io = new SocketIOServer(res.socket.server as any, {
+    const io = new IOServer(res.socket.server as HTTPServer, {
       path: "/api/socket",
     });
 
@@ -34,14 +33,11 @@ export default function handler(
       console.log("🔌 Client connected:", socket.id);
 
       socket.on("move", (data) => {
-        console.log("📤 Broadcasting move to all clients");
-        io?.emit("move", data); // ✅ Broadcast to all, including sender
+        io.emit("move", data); // send to everyone including sender
       });
     });
 
     res.socket.server.io = io;
-  } else {
-    console.log("♻️ Socket.IO server already running");
   }
 
   res.end();
