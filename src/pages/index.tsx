@@ -1,15 +1,18 @@
-"use client";
-
 import { useEffect, useRef } from "react";
-import { getSocket } from "../lib/socket";
-import type { MoveData } from "../../types/next";
+import io from "socket.io-client";
 
-export default function Page() {
-  const socketRef = useRef<Awaited<ReturnType<typeof getSocket>> | null>(null);
+type MoveData = {
+  player: string;
+  action: string;
+};
+
+export default function Home() {
+  const socketRef = useRef<ReturnType<typeof io> | null>(null);
 
   useEffect(() => {
-    const init = async () => {
-      const socket = await getSocket();
+    const setupSocket = async () => {
+      await fetch("/api/socket");
+      const socket = io({ path: "/api/socket" });
       socketRef.current = socket;
 
       socket.on("connect", () => {
@@ -17,11 +20,11 @@ export default function Page() {
       });
 
       socket.on("move", (data: MoveData) => {
-        console.log("📦 Move received:", data);
+        console.log("🎲 Move received:", data);
       });
     };
 
-    init();
+    setupSocket();
 
     return () => {
       socketRef.current?.disconnect();
