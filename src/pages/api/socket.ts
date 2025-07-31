@@ -34,7 +34,7 @@ export default function handler(
       console.log("🔌 Client connected:", socket.id);
 
       socket.on("move", (data) => {
-        socket.broadcast.emit("move", data);
+        socket.broadcast.emit("move", data); // ✅ send to all others
       });
     });
 
