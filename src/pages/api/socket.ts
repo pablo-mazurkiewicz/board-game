@@ -1,6 +1,6 @@
-import { Server as NetServer } from "http";
-import { NextApiRequest, NextApiResponse } from "next";
+import type { NextApiRequest, NextApiResponse } from "next";
 import { Server as SocketIOServer } from "socket.io";
+import type { Socket as NetSocket } from "net";
 
 export const config = {
   api: {
@@ -8,10 +8,23 @@ export const config = {
   },
 };
 
-export default function handler(req: NextApiRequest, res: NextApiResponse) {
-  if (!(res.socket as any).server.io) {
+// Define a type for the extended server object
+type NextApiResponseWithSocket = NextApiResponse & {
+  socket: NetSocket & {
+    server: {
+      io?: SocketIOServer;
+    };
+  };
+};
+
+export default function handler(
+  req: NextApiRequest,
+  res: NextApiResponseWithSocket
+) {
+  if (!res.socket.server.io) {
     console.log("🧠 Initializing Socket.IO server...");
-    const io = new SocketIOServer((res.socket as any).server, {
+    //@ts-ignore
+    const io = new SocketIOServer(res.socket.server, {
       path: "/api/socket",
     });
 
@@ -19,16 +32,13 @@ export default function handler(req: NextApiRequest, res: NextApiResponse) {
       console.log("🔌 Client connected:", socket.id);
 
       socket.on("move", (data) => {
-        console.log("🎯 Received move:", data);
         socket.broadcast.emit("move", data);
-      });
-
-      socket.on("disconnect", () => {
-        console.log("❌ Client disconnected:", socket.id);
       });
     });
 
-    (res.socket as any).server.io = io;
+    res.socket.server.io = io;
+  } else {
+    console.log("♻️ Socket.IO server already running");
   }
 
   res.end();
