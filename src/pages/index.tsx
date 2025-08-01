@@ -45,6 +45,16 @@ export default function Home() {
   return (
     <main className="p-8">
       <h1 className="text-xl font-bold mb-4">Board Game Test</h1>
+      {/* Background image */}
+  <div
+    className="absolute inset-0 bg-cover bg-center z-0"
+    style={{ backgroundImage: `url('/images/board.jpg')` }}
+  />
+
+  {/* Your actual game UI goes on top */}
+  <div className="relative z-10 p-8">
+    <h1 className="text-xl font-bold mb-4 text-white">Dune Board Game</h1>
+    <button className="bg-blue-600 text-white px-6 py-2 rounded">Do Action</button>
       <button
         onClick={sendMove}
         className="bg-blue-600 text-white px-6 py-2 rounded"
@@ -65,6 +75,7 @@ export default function Home() {
           }}
         />
       ))}
+      </div>
     </main>
   );
 }
